@@ -1,0 +1,317 @@
+---
+title: "ECON375_PS1"
+author: "Alexander Taylor"
+date: "2025-09-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(srvyr)
+options(scipen = 999)
+```
+
+
+## Load data
+
+```{r}
+socx_filtered2 <- read_csv("socx_filtered2.csv")
+
+WDI_PovertyIndicators <- read_csv("WDI_PovertyIndicators.csv")
+
+casen2011 <- read_csv("Casen2011.csv")
+
+```
+
+## Question 4A:
+
+```{r}
+socx_filtered2 |>
+  filter(TIME_PERIOD == 2024) |> 
+  group_by(`Reference area`) |>
+  summarise(PSE = sum(OBS_VALUE)) |> 
+  arrange(desc(PSE))
+```
+
+## Question 4B:
+
+```{r}
+# Get data for 1980
+socx1980 <- socx_filtered2 |> 
+  filter(TIME_PERIOD == 1980) |> 
+  select(`Reference area`, OBS_VALUE) |> 
+  rename(OBS_VALUE1980 = OBS_VALUE)
+
+# Get data for 2016
+socx2016 <- socx_filtered2 |> 
+  filter(TIME_PERIOD == 2016) |> 
+  select(`Reference area`, OBS_VALUE) |> 
+  rename(OBS_VALUE2016 = OBS_VALUE)
+
+# Merge dataframes
+socx_compare <- full_join(socx1980, socx2016, by = "Reference area")
+
+# Run analysis
+socx_compare |> 
+  mutate(socx_difference = OBS_VALUE2016 - OBS_VALUE1980) |>
+  arrange(desc(socx_difference))
+```
+
+## Question 4D (C in problem set document):
+
+```{r}
+# Clean SOCX data
+socx2022 <- socx_filtered2 |> 
+  filter(TIME_PERIOD == 2022) |> 
+  select(REF_AREA, OBS_VALUE) |> 
+  rename(socx2022_VALUE = OBS_VALUE)
+
+# Clean WDI Poverty Indicator data
+oecd_codes <- c(
+  "AUS", "AUT", "BEL", "CAN", "CHL", "COL", "CZE", "DNK", "EST", "FIN",
+  "FRA", "DEU", "GRC", "HUN", "ISL", "IRL", "ISR", "ITA", "JPN", "KOR",
+  "LVA", "LTU", "LUX", "MEX", "NLD", "NZL", "NOR", "POL", "PRT", "SVK",
+  "SVN", "ESP", "SWE", "CHE", "TUR", "GBR", "USA"
+)
+
+WDI_2022_Gap <- WDI_PovertyIndicators |> 
+  select(`Country Name`, `Country Code`, `Series Name`, `2022 [YR2022]`) |>
+  filter(`Series Name` == "Poverty gap at $8.30 a day (2021 PPP) (%)") |>
+  filter(`Country Code` %in% oecd_codes) |> 
+  rename(REF_AREA = `Country Code`, gap_2022 = `2022 [YR2022]` )
+
+WDI_2022_Headcount <- WDI_PovertyIndicators |> 
+  select(`Country Name`, `Country Code`, `Series Name`, `2022 [YR2022]`) |>
+  filter(`Series Name` == "Poverty headcount ratio at $8.30 a day (2021 PPP) (% of population)") |>
+  filter(`Country Code` %in% oecd_codes) |>
+  rename(REF_AREA = `Country Code`, headcount_2022 = `2022 [YR2022]` )
+
+# Merge data
+socx_gap <- full_join(socx2022, WDI_2022_Gap, by = "REF_AREA")
+
+socx_headcount <- full_join(socx2022, WDI_2022_Headcount, by = "REF_AREA")
+
+
+# Plot for D1 (SOCX by Poverty Gap)
+ggplot(socx_gap, aes(x = gap_2022, y = socx2022_VALUE)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  labs(
+    x = "Poverty GDP Gap (2022)",
+    y = "Public Social Expenditure (% of GDP, 2022)",
+    title = "Public Social Expenditure vs. Poverty GDP Gap"
+  ) +
+  theme_minimal()
+
+# Plot for D2 (SOCX by Poverty Headcount)
+ggplot(socx_headcount, aes(x = headcount_2022, y = socx2022_VALUE)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  labs(
+    x = "Poverty GDP Headcount (2022)",
+    y = "Public Social Expenditure (% of GDP, 2022)",
+    title = "Public Social Expenditure vs. Poverty GDP Headcount"
+  ) +
+  theme_minimal()
+
+
+```
+
+## Question 5A:
+
+```{r}
+summary(casen2011)
+```
+## Question 5B:
+
+```{r}
+casen2011 |> 
+  group_by(household) |> 
+  summarise(count = n())
+```
+## Question 5C:
+
+```{r}
+casen2011_weighted <- casen2011 |> 
+  mutate(pop_pov_weighted = poverty * weights)
+
+summary(casen2011_weighted)
+
+```
+
+## Question 5D:
+```{r}
+casen2011 |> 
+  summarise(average_LI = mean(laborincome))
+casen2011 |> 
+  mutate(total_income = laborincome + substrans) |> 
+  summarise(average_TI = mean(total_income))
+```
+
+## Question 5E:
+
+```{r}
+# What fraction of the individuals in the sample receive transfers from the government?
+total_obsv = 65535
+
+casen2011 |>
+  filter(substrans >= 1)
+total_substrans = 53200
+
+total_substrans / total_obsv * 100
+
+# What is the fraction of households receiving transfers from the government?
+
+casen2011 |> 
+  group_by(household) |> 
+  summarise(count = n())
+household_number = 17971
+
+casen2011 |> 
+  filter(substrans >= 1) |> 
+  group_by(household) |> 
+  summarise(count = n())
+household_substrans = 14031
+
+household_substrans / household_number * 100
+
+
+```
+
+## Question 5F:
+
+```{r}
+casen2011 |> 
+  mutate(total_income = laborincome + substrans,
+         education_level = case_when( education <= 8 ~ "elementary_school",
+                                      education == 9 ~ "high_school",
+                                      education == 10 ~ "high_school",
+                                      education == 11 ~ "high_school",
+                                      education == 12 ~ "high_school",
+                                      education > 12 ~ "tertiary",
+        .default = "NA"
+      )
+         ) |>
+  group_by(education_level) |> 
+  summarise(average_TI = mean(total_income)) |> 
+  arrange(desc(average_TI))
+
+
+```
+
+## Question 5G:
+
+```{r}
+total_obsv = 65535
+
+# Calculate amount in urban poverty
+casen2011 |> 
+  mutate(total_income = laborincome + substrans, household_PCincome = total_income /numper) |> 
+  filter(urban == 1, household_PCincome < 72098)
+urban_poor = 6855
+
+# Calculate amount in rural poverty
+casen2011 |> 
+  mutate(total_income = laborincome + substrans, household_PCincome = total_income /numper) |> 
+  filter(urban == 0, household_PCincome < 48612)
+rural_poor = 604
+
+# Calculate headcount
+
+(urban_poor + rural_poor) / 65535 * 100
+```
+
+## Question 5H:
+
+```{r}
+total_obsv = 65535
+
+casen2011 |> 
+  summarise(sum(poverty))
+
+sum_poverty = 7459	
+
+sum_poverty / total_obsv * 100
+```
+
+## Question 5I:
+
+```{r}
+casen2011_weighted |> 
+  summarise(sum(pop_pov_weighted))
+
+total_weighted_poverty = 224854
+
+casen2011_weighted |> 
+  summarise(sum(weights))
+
+total_weights = 1836155
+
+# calculate weighted headcount
+
+total_weighted_poverty / total_weights * 100
+```
+
+## Question 5J:
+
+```{r}
+casen2011_weighted <- casen2011_weighted |>
+  mutate(
+    total_income = laborincome + substrans,
+    household_PCincome = total_income / numper,
+    gap_index = case_when(
+      urban == 1 & household_PCincome < 72098 ~ 1 - (household_PCincome / 72098),
+      urban == 0 & household_PCincome < 48612 ~ 1 - (household_PCincome / 48612),
+      TRUE ~ 0
+    ),
+    P_1 = gap_index * 12.24592
+  )
+
+casen2011_weighted |>
+  summarise(mean(P_1))
+  
+```
+
+## Question 5K:
+```{r}
+casen2011_weighted |> 
+  mutate(
+    education_level = case_when( education <= 8 ~ "elementary_school",
+                                      education == 9 ~ "high_school",
+                                      education == 10 ~ "high_school",
+                                      education == 11 ~ "high_school",
+                                      education == 12 ~ "high_school",
+                                      education > 12 ~ "tertiary",
+        .default = "NA"
+      )
+  ) |> 
+  group_by(education_level) |> 
+  summarise(P_1_bySchool = mean(P_1))
+```
+
+## Question 5K:
+```{r}
+# Find how much we need to spend
+
+casen2011_weighted |> 
+  mutate(
+    diff_z = case_when(
+      urban == 1 & household_PCincome < 72098 ~ 72098 - household_PCincome,
+      urban == 0 & household_PCincome < 48612 ~ 48612 - household_PCincome,
+      TRUE ~ 0
+    )
+  ) |> 
+  summarise(sum(diff_z))
+ 
+# Compare to GDP 
+  deficit = 162500842 * 12
+  GDP_2011 = 239428571332800 # measured in CLP
+  
+  deficit / GDP_2011
+  
+  
+
+
+```
+
