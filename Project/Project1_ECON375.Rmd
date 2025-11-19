@@ -1,0 +1,101 @@
+---
+title: "Project_Econ375"
+author: "Alexander Taylor"
+date: "2025-10-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+```
+
+
+# Load libraries
+```{r}
+library(tidyverse)
+library(tidycensus)
+library(janitor)
+library(lubridate)
+
+```
+
+# Load, clean and join data
+
+```{r}
+ # Load and clean data
+Personal_Income <- read_csv("data/MDPersonalIncome_2023.csv") |>
+  select(County, '2023') |>
+  rename(Income_23 = '2023')
+
+Personal_Income <- Personal_Income |> 
+  mutate(Income_23 = as.numeric(Income_23))
+
+Real_GDP <- read_csv("data/MDRealGDP_2023.csv") |>
+  select(County, '2023') |>
+  rename(GDP_23 = '2023')
+  
+Real_GDP <- Real_GDP |>
+  mutate(GDP_23 = as.numeric(GDP_23))
+
+Commute_Time <- read_csv("data/MeanCommutingTime_2023.csv") |>
+  rename(CommuteTime_23 = '2023')
+
+Commute_Time <- Commute_Time |>
+  mutate(CommuteTime_23 = as.numeric(CommuteTime_23))
+
+# Join data
+Joined_Data <- left_join(Personal_Income, Real_GDP)
+Joined_Data <- Joined_Data |>
+  left_join(Commute_Time)
+
+glimpse(Joined_Data)
+
+```
+
+# Run Regression Model
+
+```{r}
+mr_model_1 <- lm(Income_23 ~ GDP_23 + CommuteTime_23, data = Joined_Data)
+summary(mr_model_1)
+```
+
+######### Test each variables by Personal Income #########
+
+# GDP
+
+```{r}
+# Calculate correlation
+Joined_Data |>
+  summarize(cor(GDP_23, Income_23, method = "pearson"))
+
+# Visualize correlation
+Joined_Data |>
+  ggplot() +
+  geom_point(aes(x=Income_23, y=GDP_23)) +
+  geom_smooth(aes(x=Income_23, y=GDP_23), method = "lm") +
+  geom_text(aes(x=Income_23, y=GDP_23, label=County), size = 3)
+
+# Calculate linear regression model
+summary(lm(Income_23 ~ GDP_23, data = Joined_Data))
+
+```
+
+# Commute time 
+
+```{r}
+# Calculate correlation
+Joined_Data |>
+  summarize(cor(CommuteTime_23, Income_23, method = "pearson"))
+
+# Visualize correlation
+Joined_Data |>
+  ggplot() +
+  geom_point(aes(x=Income_23, y=CommuteTime_23)) +
+  geom_smooth(aes(x=Income_23, y=CommuteTime_23), method = "lm") +
+  geom_text(aes(x=Income_23, y=CommuteTime_23, label=County), size = 3)
+
+# Calculate linear regression model
+summary(lm(Income_23 ~ CommuteTime_23, data = Joined_Data))
+
+```

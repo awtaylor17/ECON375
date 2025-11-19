@@ -1,0 +1,600 @@
+---
+title: "ECON375_PS2"
+author: "Alexander Taylor"
+date: "2025-11-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load data and libraries
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(ineq)
+library(tibble)
+library(knitr)
+
+
+CNLSY79 <- read_csv("PS2_Data_CNLSY.csv")
+Ghana <- read_csv("PS2_Data_Ghana.csv")
+
+```
+## 1a
+```{r}
+nrow(CNLSY79 |>
+  group_by(id_mom) |>
+  summarise(count = n()))
+
+
+```
+
+## 1c
+```{r}
+
+# caclulate means of the ASVAB scores
+CNLSY79 |>
+  summarise(
+     mean(asvab1_mom, na.rm = TRUE),
+     mean(asvab2_mom, na.rm = TRUE),
+     mean(asvab3_mom, na.rm = TRUE),
+     mean(asvab4_mom, na.rm = TRUE),
+     mean(asvab5_mom, na.rm = TRUE),
+     mean(asvab6_mom, na.rm = TRUE)
+  )
+
+```
+
+## 1d
+
+```{r}
+
+# BPI 
+BPI <- CNLSY79 |> 
+  summarise(
+    mean = mean(te_bpi_totpct, na.rm = TRUE),
+    median = median(te_bpi_totpct, na.rm = TRUE),
+    min = min(te_bpi_totpct, na.rm = TRUE),
+    max = max(te_bpi_totpct, na.rm = TRUE),
+    IQR = IQR(te_bpi_totpct, na.rm = TRUE)
+    )
+
+# PPVT
+PPVT_5 <- CNLSY79 |> 
+  summarise(
+    mean = mean(ste_ppvt_totstd5, na.rm = TRUE),
+    median = median(ste_ppvt_totstd5, na.rm = TRUE),
+    min = min(ste_ppvt_totstd5, na.rm = TRUE),
+    max = max(ste_ppvt_totstd5, na.rm = TRUE),
+    IQR = IQR(ste_ppvt_totstd5, na.rm = TRUE)
+    )
+
+PPVT_10 <- CNLSY79 |> 
+  summarise(
+    mean = mean(ste_ppvt_totstd10, na.rm = TRUE),
+    median = median(ste_ppvt_totstd10, na.rm = TRUE),
+    min = min(ste_ppvt_totstd10, na.rm = TRUE),
+    max = max(ste_ppvt_totstd10, na.rm = TRUE),
+    IQR = IQR(ste_ppvt_totstd10, na.rm = TRUE)
+    )
+
+PPVT_15 <- CNLSY79 |> 
+  summarise(
+    mean = mean(ste_ppvt_totstd15, na.rm = TRUE),
+    median = median(ste_ppvt_totstd15, na.rm = TRUE),
+    min = min(ste_ppvt_totstd15, na.rm = TRUE),
+    max = max(ste_ppvt_totstd15, na.rm = TRUE),
+    IQR = IQR(ste_ppvt_totstd15, na.rm = TRUE)
+    )
+
+# PIAT
+
+PIAT_5 <- CNLSY79 |> 
+  summarise(
+    mean = mean(ste_piatma_totstd5, na.rm = TRUE),
+    median = median(ste_piatma_totstd5, na.rm = TRUE),
+    min = min(ste_piatma_totstd5, na.rm = TRUE),
+    max = max(ste_piatma_totstd5, na.rm = TRUE),
+    IQR = IQR(ste_piatma_totstd5, na.rm = TRUE)
+    )
+
+PIAT_10 <- CNLSY79 |> 
+  summarise(
+    mean = mean(ste_piatma_totstd10, na.rm = TRUE),
+    median = median(ste_piatma_totstd10, na.rm = TRUE),
+    min = min(ste_piatma_totstd10, na.rm = TRUE),
+    max = max(ste_piatma_totstd10, na.rm = TRUE),
+    IQR = IQR(ste_piatma_totstd10, na.rm = TRUE)
+    )
+
+PIAT_15 <- CNLSY79 |> 
+  summarise(
+    mean = mean(ste_piatma_totstd15, na.rm = TRUE),
+    median = median(ste_piatma_totstd15, na.rm = TRUE),
+    min = min(ste_piatma_totstd15, na.rm = TRUE),
+    max = max(ste_piatma_totstd15, na.rm = TRUE),
+    IQR = IQR(ste_piatma_totstd15, na.rm = TRUE)
+    )
+
+# Antisocial behavior
+
+asoc_5 <- CNLSY79 |> 
+  summarise(
+    mean = mean(ste_asoc5, na.rm = TRUE),
+    median = median(ste_asoc5, na.rm = TRUE),
+    min = min(ste_asoc5, na.rm = TRUE),
+    max = max(ste_asoc5, na.rm = TRUE),
+    IQR = IQR(ste_asoc5, na.rm = TRUE)
+    )
+
+asoc_10 <- CNLSY79 |> 
+  summarise(
+    mean = mean(ste_asoc10, na.rm = TRUE),
+    median = median(ste_asoc10, na.rm = TRUE),
+    min = min(ste_asoc10, na.rm = TRUE),
+    max = max(ste_asoc10, na.rm = TRUE),
+    IQR = IQR(ste_asoc10, na.rm = TRUE)
+    )
+
+asoc_15 <- CNLSY79 |> 
+  summarise(
+    mean = mean(ste_asoc15, na.rm = TRUE),
+    median = median(ste_asoc15, na.rm = TRUE),
+    min = min(ste_asoc15, na.rm = TRUE),
+    max = max(ste_asoc15, na.rm = TRUE),
+    IQR = IQR(ste_asoc15, na.rm = TRUE)
+    )
+
+# report data
+
+BPI
+
+PPVT <- bind_rows(PPVT_5, PPVT_10, PPVT_15) |>
+  mutate(age = c("age_5", "age_10", "age_15" )) |>
+  select(age, everything())
+PPVT
+
+PIAT <- bind_rows(PIAT_5, PIAT_10, PIAT_15) |>
+  mutate(age = c("age_5", "age_10", "age_15" )) |>
+  select(age, everything())
+PIAT
+
+asoc <- bind_rows(asoc_5, asoc_10, asoc_15) |>
+  mutate(age = c("age_5", "age_10", "age_15" )) |>
+  select(age, everything())
+asoc
+
+
+```
+
+## 1e
+```{r}
+# Race
+CNLSY79 |>
+  group_by(race) |> 
+  summarise(count = n()) |>
+  mutate(
+    pct = count/sum(count) * 100
+  ) |>
+  arrange(desc(pct))
+
+# Gender
+CNLSY79 |>
+  group_by(male) |> 
+  summarise(count = n()) |>
+  mutate(
+    pct = count/sum(count) * 100
+  )|>
+  arrange(desc(pct))
+
+# Family income of the mom
+CNLSY79 |>
+  summarise(
+    mean = mean(faminc79_mom, na.rm = TRUE),
+    mediam = median(faminc79_mom, na.rm = TRUE),
+    min = min(faminc79_mom, na.rm = TRUE),
+    max = max(faminc79_mom, na.rm = TRUE),
+    IQR = IQR(faminc79_mom, na.rm = TRUE)
+  )
+  
+
+
+# Family income current
+CNLSY79 |>
+  summarise(
+    mean = mean(faminc_curr, na.rm = TRUE),
+    mediam = median(faminc_curr, na.rm = TRUE),
+    min = min(faminc_curr, na.rm = TRUE),
+    max = max(faminc_curr, na.rm = TRUE),
+    IQR = IQR(faminc_curr, na.rm = TRUE)
+  )
+  
+
+```
+## 1f
+
+```{r}
+
+# Gini
+Gini_5 = abs(Gini(CNLSY79$ste_ppvt_totstd5))
+
+Gini_10 = abs(Gini(CNLSY79$ste_ppvt_totstd10))
+
+Gini_15 = abs(Gini(CNLSY79$ste_ppvt_totstd15))
+
+# Theil
+Theil_5 = Theil(abs(CNLSY79$ste_ppvt_totstd5))
+Theil_10 = Theil(abs(CNLSY79$ste_ppvt_totstd10))
+Theil_15 = Theil(abs(CNLSY79$ste_ppvt_totstd15))
+
+
+# create dataframe for easy comparison
+age = c("age_5", "age_10", "age_15")
+gini = c(Gini_5, Gini_10, Gini_15)
+theil = c(Theil_5, Theil_10, Theil_15)
+
+gini_v_theil <- data.frame(age, gini, theil)
+gini_v_theil
+
+```
+
+
+## 1g.
+```{r}
+CNLSY79 <- CNLSY79 |>
+  mutate(
+    mothers_schooling_level = case_when( ysch_mom < 12 ~ "1",
+                                      ysch_mom == 12 ~ "2",
+                                      ysch_mom == 13 ~ "2",
+                                      ysch_mom == 14 ~ "2",
+                                      ysch_mom == 15 ~ "2",
+                                      ysch_mom >= 16 ~ "3",
+                                      
+  ))
+
+
+CNLSY79 |>
+  group_by(mothers_schooling_level) |>
+  summarise(count = n())
+
+
+```
+
+## 1h
+```{r}
+
+# Fix zeros
+CNLSY79$ste_ppvt_totstd5[CNLSY79$ste_ppvt_totstd5 <= 0] <- 1e-6
+
+# Remove NA incomes
+CNLSY79 <- CNLSY79[!is.na(CNLSY79$ste_ppvt_totstd5), ]
+
+# Convert NA groups
+CNLSY79$mothers_schooling_level <- ifelse(is.na(CNLSY79$mothers_schooling_level), "Unknown", CNLSY79$mothers_schooling_level)
+
+# Overall mean
+mu_total <- mean(CNLSY79$ste_ppvt_totstd5)
+
+# Group means
+mu_group <- tapply(CNLSY79$ste_ppvt_totstd5, CNLSY79$mothers_schooling_level, mean)
+
+# Income shares s_k
+s_group <- tapply(CNLSY79$ste_ppvt_totstd5, CNLSY79$mothers_schooling_level, sum) / sum(CNLSY79$ste_ppvt_totstd5)
+
+# Theil T within each group
+T_group <- tapply(CNLSY79$ste_ppvt_totstd5, CNLSY79$mothers_schooling_level, function(x) entropy(x))
+
+# Within-group component
+within <- sum(s_group * T_group)
+
+# Between-group component
+between <- sum(s_group * log(mu_group / mu_total))
+
+# Total from decomposition
+total_decomp <- within + between
+
+# Total computed directly
+total_direct <- entropy(CNLSY79$ste_ppvt_totstd5)
+
+list(
+  total_direct   = total_direct,
+  total_decomp   = total_decomp,
+  within         = within,
+  between        = between,
+  share_within   = within / total_decomp,
+  share_between  = between / total_decomp
+)
+
+
+
+
+```
+
+## 1i
+```{r}
+
+# Fix zeros
+CNLSY79$ste_ppvt_totstd15[CNLSY79$ste_ppvt_totstd15 <= 0] <- 1e-6
+
+# Remove NA incomes
+CNLSY79 <- CNLSY79[!is.na(CNLSY79$ste_ppvt_totstd15), ]
+
+# Convert NA groups
+CNLSY79$mothers_schooling_level <- ifelse(is.na(CNLSY79$mothers_schooling_level), "Unknown", CNLSY79$mothers_schooling_level)
+
+# Overall mean
+mu_total <- mean(CNLSY79$ste_ppvt_totstd15)
+
+# Group means
+mu_group <- tapply(CNLSY79$ste_ppvt_totstd15, CNLSY79$mothers_schooling_level, mean)
+
+# Income shares s_k
+s_group <- tapply(CNLSY79$ste_ppvt_totstd15, CNLSY79$mothers_schooling_level, sum) / sum(CNLSY79$ste_ppvt_totstd15)
+
+# Theil T within each group
+T_group <- tapply(CNLSY79$ste_ppvt_totstd15, CNLSY79$mothers_schooling_level, function(x) entropy(x))
+
+# Within-group component
+within <- sum(s_group * T_group)
+
+# Between-group component
+between <- sum(s_group * log(mu_group / mu_total))
+
+# Total from decomposition
+total_decomp <- within + between
+
+# Total computed directly
+total_direct <- entropy(CNLSY79$ste_ppvt_totstd15)
+
+list(
+  total_direct   = total_direct,
+  total_decomp   = total_decomp,
+  within         = within,
+  between        = between,
+  share_within   = within / total_decomp,
+  share_between  = between / total_decomp
+)
+
+
+```
+
+## 1k
+```{r}
+options(scipen = 999)
+
+# BPA
+summary(lm(te_bpi_totpct ~ male, data = CNLSY79))
+
+# PPVT
+summary(lm(ste_ppvt_totstd5 ~ male, data = CNLSY79))
+
+summary(lm(ste_ppvt_totstd10 ~ male, data = CNLSY79))
+
+summary(lm(ste_ppvt_totstd15 ~ male, data = CNLSY79))
+
+# PIAT
+summary(lm(ste_piatma_totstd5 ~ male, data = CNLSY79))
+
+summary(lm(ste_piatma_totstd10 ~ male, data = CNLSY79))
+
+summary(lm(ste_piatma_totstd15 ~ male, data = CNLSY79))
+
+# asoc
+summary(lm(ste_asoc5 ~ male, data = CNLSY79))
+
+summary(lm(ste_asoc10 ~ male, data = CNLSY79))
+
+summary(lm(ste_asoc15 ~ male, data = CNLSY79))
+
+
+
+```
+
+## 1l
+```{r}
+
+# BPA
+summary(lm(te_bpi_totpct ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+# PPVT
+
+summary(lm(ste_ppvt_totstd5 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+summary(lm(ste_ppvt_totstd10 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+summary(lm(ste_ppvt_totstd15 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+# PIAT
+summary(lm(ste_piatma_totstd5 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+summary(lm(ste_piatma_totstd10 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+summary(lm(ste_piatma_totstd15 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+# asoc
+summary(lm(ste_asoc5 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+summary(lm(ste_asoc10 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+summary(lm(ste_asoc15 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom, data = CNLSY79))
+
+```
+
+## 1m.
+```{r}
+CNLSY79 <- CNLSY79 |>
+  mutate(
+    race_black    = if_else(race == "Black", 1, 0),
+    race_white    = if_else(race == "White", 1, 0),
+    race_hispanic = if_else(race == "Hispanic", 1, 0),
+    race_other = if_else(race == "Other", 1, 0)
+  )
+
+###
+
+# BPA
+summary(lm(te_bpi_totpct ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+# PPVT
+
+summary(lm(ste_ppvt_totstd5 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+summary(lm(ste_ppvt_totstd10 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+summary(lm(ste_ppvt_totstd15 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+# PIAT
+summary(lm(ste_piatma_totstd5 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+summary(lm(ste_piatma_totstd10 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+summary(lm(ste_piatma_totstd15 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+# asoc
+summary(lm(ste_asoc5 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+summary(lm(ste_asoc10 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+summary(lm(ste_asoc15 ~ male + asvab1_mom + asvab2_mom + asvab3_mom + asvab4_mom + asvab5_mom + asvab6_mom + ysch_mom + faminc79_mom + race_black + race_white + race_hispanic + race_other, data = CNLSY79))
+
+```
+## 2a
+```{r}
+
+summary(Ghana)
+
+
+```
+
+## 2b
+```{r}
+Ghana <- Ghana |>
+  mutate(
+    highest_schooling_level = case_when(
+      s2aq2 == "None" ~ 0,
+      s2aq2 == "P1" | s2aq2 == "P2" | s2aq2 == "P3"| s2aq2 == "P4"| s2aq2 == "P5"| s2aq2 == "P6"| s2aq2 == "Pre school" ~ 1,
+      s2aq2 == "JSS/JHS 2" | s2aq2 == "JSS1/JHS1" | s2aq2 == "JSS3/JHS3" | s2aq2 == "M1" | s2aq2 == "M2" | s2aq2 == "M3" | s2aq2 == "M4" | s2aq2 == "Nursing"| s2aq2 == "L6"| s2aq2 == "S1"| s2aq2 == "S2"| s2aq2 == "S3"| s2aq2 == "S4"| s2aq2 == "S5"| s2aq2 == "SHS4"| s2aq2 == "SS1/SHS1"| s2aq2 == "SSS2/SHS2"| s2aq2 == "SSS3/SHS3" | s2aq2 == "Voc//Tec" | s2aq2 == "tech training"   ~ 2,
+      s2aq2 == "Other tertiary"| s2aq2 == "Polytechnic" | s2aq2 == "U6" | s2aq2 == "University" ~ 3
+    )
+  )
+
+
+Ghana |> 
+  group_by(highest_schooling_level) |>
+  summarise(count = n())
+
+```
+
+## 2c.
+```{r}
+
+Ghana <- Ghana |>
+  mutate(
+    wage = 2.71828^lnw
+  )
+
+Ghana |>
+  group_by(highest_schooling_level) |>
+  summarise(
+    avg_wage = mean(wage, na.rm = TRUE)
+  ) |>
+  mutate(
+    return_to_ed = avg_wage - 1855.96617141314001777		
+  ) |> 
+  filter(highest_schooling_level != "NA")
+  
+
+
+```
+## 2d
+```{r}
+Ghana <- Ghana |> 
+  mutate(
+    exp2 = exp^2
+  )
+
+Ghana_working = Ghana |>
+  filter(s2aq4 == "No")
+
+lm(lnw ~ highest_schooling_level + exp + exp2, data = Ghana_working, weights = weight)
+
+
+
+```
+
+## 2f
+```{r}
+lm(lnw ~ highest_schooling_level, data = Ghana_working, weights = weight)
+
+```
+
+
+## 2g
+```{r}
+Gini(Ghana$wage)
+
+
+```
+
+## 2h
+```{r}
+Ghana |>
+  group_by(highest_schooling_level) |>
+  summarise(gini = Gini(wage)) |>
+  filter(highest_schooling_level != "NA")
+
+```
+
+## 2j
+```{r}
+
+# Fix zeros
+Ghana$wage[Ghana$wage <= 0] <- 1e-6
+
+# Remove NA incomes
+Ghana <- Ghana[!is.na(Ghana$wage), ]
+
+# Convert NA groups
+Ghana$highest_schooling_level <- ifelse(is.na(Ghana$highest_schooling_level), "Unknown", Ghana$highest_schooling_level)
+
+# Overall mean
+mu_total <- mean(Ghana$wage)
+
+# Group means
+mu_group <- tapply(Ghana$wage, Ghana$highest_schooling_level, mean)
+
+# Income shares s_k
+s_group <- tapply(Ghana$wage, Ghana$highest_schooling_level, sum) / sum(Ghana$wage)
+
+# Theil T within each group
+T_group <- tapply(Ghana$wage, Ghana$highest_schooling_level, function(x) entropy(x))
+
+# Within-group component
+within <- sum(s_group * T_group)
+
+# Between-group component
+between <- sum(s_group * log(mu_group / mu_total))
+
+# Total from decomposition
+total_decomp <- within + between
+
+# Total computed directly
+total_direct <- entropy(Ghana$wage)
+
+list(
+  total_direct   = total_direct,
+  total_decomp   = total_decomp,
+  within         = within,
+  between        = between,
+  share_within   = within / total_decomp,
+  share_between  = between / total_decomp
+)
+
+
+
+```
+
